@@ -10,6 +10,8 @@ class MoldRecord {
     this.pressedAt,
     this.remoldedFromId,
     this.remoldedAt,
+    this.splitFromMoldId,
+    this.splitAt,
   });
 
   final String id;
@@ -26,7 +28,14 @@ class MoldRecord {
   final String? remoldedFromId;
   final DateTime? remoldedAt;
 
+  /// 若本模具是「裂开分件」而来的第二件，指向裂开的原模具。
+  final String? splitFromMoldId;
+  final DateTime? splitAt;
+
   bool get isRemold => remoldedFromId != null;
+
+  /// 是否为裂件分出的第二件。
+  bool get isSplitPiece => splitFromMoldId != null;
 
   MoldRecord copyWith({
     double? weightG,
@@ -34,6 +43,8 @@ class MoldRecord {
     DateTime? pressedAt,
     String? remoldedFromId,
     DateTime? remoldedAt,
+    String? splitFromMoldId,
+    DateTime? splitAt,
   }) =>
       MoldRecord(
         id: id,
@@ -45,5 +56,7 @@ class MoldRecord {
         pressedAt: pressedAt ?? this.pressedAt,
         remoldedFromId: remoldedFromId ?? this.remoldedFromId,
         remoldedAt: remoldedAt ?? this.remoldedAt,
+        splitFromMoldId: splitFromMoldId ?? this.splitFromMoldId,
+        splitAt: splitAt ?? this.splitAt,
       );
 }

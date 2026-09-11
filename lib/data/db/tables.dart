@@ -73,7 +73,7 @@ class MoldBatches extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// 单个模具记录（含换模链）。
+/// 单个模具记录（含换模链与裂件分件链）。
 class Molds extends Table {
   TextColumn get id => text()();
   TextColumn get batchId => text().references(MoldBatches, #id)();
@@ -84,6 +84,26 @@ class Molds extends Table {
   DateTimeColumn get pressedAt => dateTime().nullable()();
   TextColumn get remoldedFromId => text().nullable()();
   DateTimeColumn get remoldedAt => dateTime().nullable()();
+
+  /// 裂成两件时，第二件指向原模具。
+  TextColumn get splitFromMoldId => text().nullable()();
+  DateTimeColumn get splitAt => dateTime().nullable()();
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// 翻模轮次记录：每次翻面一行，含实际时刻与落库时刻（可识别补录）。
+class MoldTurns extends Table {
+  TextColumn get id => text()();
+  TextColumn get moldId => text().references(Molds, #id)();
+  TextColumn get vatId => text().references(Vats, #id)();
+  IntColumn get round => integer()();
+  TextColumn get position => text()();
+  DateTimeColumn get turnedAt => dateTime()();
+  DateTimeColumn get recordedAt => dateTime()();
+  IntColumn get damage => intEnum<TurnDamage>()();
+  TextColumn get pressPlateId => text().nullable()();
+  TextColumn get note => text().nullable()();
   @override
   Set<Column> get primaryKey => {id};
 }

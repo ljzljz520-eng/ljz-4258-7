@@ -2493,6 +2493,28 @@ class $MoldsTable extends Molds with TableInfo<$MoldsTable, Mold> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _splitFromMoldIdMeta = const VerificationMeta(
+    'splitFromMoldId',
+  );
+  @override
+  late final GeneratedColumn<String> splitFromMoldId = GeneratedColumn<String>(
+    'split_from_mold_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _splitAtMeta = const VerificationMeta(
+    'splitAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> splitAt = GeneratedColumn<DateTime>(
+    'split_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2504,6 +2526,8 @@ class $MoldsTable extends Molds with TableInfo<$MoldsTable, Mold> {
     pressedAt,
     remoldedFromId,
     remoldedAt,
+    splitFromMoldId,
+    splitAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2579,6 +2603,21 @@ class $MoldsTable extends Molds with TableInfo<$MoldsTable, Mold> {
         remoldedAt.isAcceptableOrUnknown(data['remolded_at']!, _remoldedAtMeta),
       );
     }
+    if (data.containsKey('split_from_mold_id')) {
+      context.handle(
+        _splitFromMoldIdMeta,
+        splitFromMoldId.isAcceptableOrUnknown(
+          data['split_from_mold_id']!,
+          _splitFromMoldIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('split_at')) {
+      context.handle(
+        _splitAtMeta,
+        splitAt.isAcceptableOrUnknown(data['split_at']!, _splitAtMeta),
+      );
+    }
     return context;
   }
 
@@ -2624,6 +2663,14 @@ class $MoldsTable extends Molds with TableInfo<$MoldsTable, Mold> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}remolded_at'],
       ),
+      splitFromMoldId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}split_from_mold_id'],
+      ),
+      splitAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}split_at'],
+      ),
     );
   }
 
@@ -2643,6 +2690,10 @@ class Mold extends DataClass implements Insertable<Mold> {
   final DateTime? pressedAt;
   final String? remoldedFromId;
   final DateTime? remoldedAt;
+
+  /// 裂成两件时，第二件指向原模具。
+  final String? splitFromMoldId;
+  final DateTime? splitAt;
   const Mold({
     required this.id,
     required this.batchId,
@@ -2653,6 +2704,8 @@ class Mold extends DataClass implements Insertable<Mold> {
     this.pressedAt,
     this.remoldedFromId,
     this.remoldedAt,
+    this.splitFromMoldId,
+    this.splitAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2675,6 +2728,12 @@ class Mold extends DataClass implements Insertable<Mold> {
     }
     if (!nullToAbsent || remoldedAt != null) {
       map['remolded_at'] = Variable<DateTime>(remoldedAt);
+    }
+    if (!nullToAbsent || splitFromMoldId != null) {
+      map['split_from_mold_id'] = Variable<String>(splitFromMoldId);
+    }
+    if (!nullToAbsent || splitAt != null) {
+      map['split_at'] = Variable<DateTime>(splitAt);
     }
     return map;
   }
@@ -2700,6 +2759,12 @@ class Mold extends DataClass implements Insertable<Mold> {
       remoldedAt: remoldedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(remoldedAt),
+      splitFromMoldId: splitFromMoldId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(splitFromMoldId),
+      splitAt: splitAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(splitAt),
     );
   }
 
@@ -2718,6 +2783,8 @@ class Mold extends DataClass implements Insertable<Mold> {
       pressedAt: serializer.fromJson<DateTime?>(json['pressedAt']),
       remoldedFromId: serializer.fromJson<String?>(json['remoldedFromId']),
       remoldedAt: serializer.fromJson<DateTime?>(json['remoldedAt']),
+      splitFromMoldId: serializer.fromJson<String?>(json['splitFromMoldId']),
+      splitAt: serializer.fromJson<DateTime?>(json['splitAt']),
     );
   }
   @override
@@ -2733,6 +2800,8 @@ class Mold extends DataClass implements Insertable<Mold> {
       'pressedAt': serializer.toJson<DateTime?>(pressedAt),
       'remoldedFromId': serializer.toJson<String?>(remoldedFromId),
       'remoldedAt': serializer.toJson<DateTime?>(remoldedAt),
+      'splitFromMoldId': serializer.toJson<String?>(splitFromMoldId),
+      'splitAt': serializer.toJson<DateTime?>(splitAt),
     };
   }
 
@@ -2746,6 +2815,8 @@ class Mold extends DataClass implements Insertable<Mold> {
     Value<DateTime?> pressedAt = const Value.absent(),
     Value<String?> remoldedFromId = const Value.absent(),
     Value<DateTime?> remoldedAt = const Value.absent(),
+    Value<String?> splitFromMoldId = const Value.absent(),
+    Value<DateTime?> splitAt = const Value.absent(),
   }) => Mold(
     id: id ?? this.id,
     batchId: batchId ?? this.batchId,
@@ -2758,6 +2829,10 @@ class Mold extends DataClass implements Insertable<Mold> {
         ? remoldedFromId.value
         : this.remoldedFromId,
     remoldedAt: remoldedAt.present ? remoldedAt.value : this.remoldedAt,
+    splitFromMoldId: splitFromMoldId.present
+        ? splitFromMoldId.value
+        : this.splitFromMoldId,
+    splitAt: splitAt.present ? splitAt.value : this.splitAt,
   );
   Mold copyWithCompanion(MoldsCompanion data) {
     return Mold(
@@ -2774,6 +2849,10 @@ class Mold extends DataClass implements Insertable<Mold> {
       remoldedAt: data.remoldedAt.present
           ? data.remoldedAt.value
           : this.remoldedAt,
+      splitFromMoldId: data.splitFromMoldId.present
+          ? data.splitFromMoldId.value
+          : this.splitFromMoldId,
+      splitAt: data.splitAt.present ? data.splitAt.value : this.splitAt,
     );
   }
 
@@ -2788,7 +2867,9 @@ class Mold extends DataClass implements Insertable<Mold> {
           ..write('moldedAt: $moldedAt, ')
           ..write('pressedAt: $pressedAt, ')
           ..write('remoldedFromId: $remoldedFromId, ')
-          ..write('remoldedAt: $remoldedAt')
+          ..write('remoldedAt: $remoldedAt, ')
+          ..write('splitFromMoldId: $splitFromMoldId, ')
+          ..write('splitAt: $splitAt')
           ..write(')'))
         .toString();
   }
@@ -2804,6 +2885,8 @@ class Mold extends DataClass implements Insertable<Mold> {
     pressedAt,
     remoldedFromId,
     remoldedAt,
+    splitFromMoldId,
+    splitAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -2817,7 +2900,9 @@ class Mold extends DataClass implements Insertable<Mold> {
           other.moldedAt == this.moldedAt &&
           other.pressedAt == this.pressedAt &&
           other.remoldedFromId == this.remoldedFromId &&
-          other.remoldedAt == this.remoldedAt);
+          other.remoldedAt == this.remoldedAt &&
+          other.splitFromMoldId == this.splitFromMoldId &&
+          other.splitAt == this.splitAt);
 }
 
 class MoldsCompanion extends UpdateCompanion<Mold> {
@@ -2830,6 +2915,8 @@ class MoldsCompanion extends UpdateCompanion<Mold> {
   final Value<DateTime?> pressedAt;
   final Value<String?> remoldedFromId;
   final Value<DateTime?> remoldedAt;
+  final Value<String?> splitFromMoldId;
+  final Value<DateTime?> splitAt;
   final Value<int> rowid;
   const MoldsCompanion({
     this.id = const Value.absent(),
@@ -2841,6 +2928,8 @@ class MoldsCompanion extends UpdateCompanion<Mold> {
     this.pressedAt = const Value.absent(),
     this.remoldedFromId = const Value.absent(),
     this.remoldedAt = const Value.absent(),
+    this.splitFromMoldId = const Value.absent(),
+    this.splitAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MoldsCompanion.insert({
@@ -2853,6 +2942,8 @@ class MoldsCompanion extends UpdateCompanion<Mold> {
     this.pressedAt = const Value.absent(),
     this.remoldedFromId = const Value.absent(),
     this.remoldedAt = const Value.absent(),
+    this.splitFromMoldId = const Value.absent(),
+    this.splitAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        batchId = Value(batchId),
@@ -2868,6 +2959,8 @@ class MoldsCompanion extends UpdateCompanion<Mold> {
     Expression<DateTime>? pressedAt,
     Expression<String>? remoldedFromId,
     Expression<DateTime>? remoldedAt,
+    Expression<String>? splitFromMoldId,
+    Expression<DateTime>? splitAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2880,6 +2973,8 @@ class MoldsCompanion extends UpdateCompanion<Mold> {
       if (pressedAt != null) 'pressed_at': pressedAt,
       if (remoldedFromId != null) 'remolded_from_id': remoldedFromId,
       if (remoldedAt != null) 'remolded_at': remoldedAt,
+      if (splitFromMoldId != null) 'split_from_mold_id': splitFromMoldId,
+      if (splitAt != null) 'split_at': splitAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2894,6 +2989,8 @@ class MoldsCompanion extends UpdateCompanion<Mold> {
     Value<DateTime?>? pressedAt,
     Value<String?>? remoldedFromId,
     Value<DateTime?>? remoldedAt,
+    Value<String?>? splitFromMoldId,
+    Value<DateTime?>? splitAt,
     Value<int>? rowid,
   }) {
     return MoldsCompanion(
@@ -2906,6 +3003,8 @@ class MoldsCompanion extends UpdateCompanion<Mold> {
       pressedAt: pressedAt ?? this.pressedAt,
       remoldedFromId: remoldedFromId ?? this.remoldedFromId,
       remoldedAt: remoldedAt ?? this.remoldedAt,
+      splitFromMoldId: splitFromMoldId ?? this.splitFromMoldId,
+      splitAt: splitAt ?? this.splitAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2940,6 +3039,12 @@ class MoldsCompanion extends UpdateCompanion<Mold> {
     if (remoldedAt.present) {
       map['remolded_at'] = Variable<DateTime>(remoldedAt.value);
     }
+    if (splitFromMoldId.present) {
+      map['split_from_mold_id'] = Variable<String>(splitFromMoldId.value);
+    }
+    if (splitAt.present) {
+      map['split_at'] = Variable<DateTime>(splitAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2958,6 +3063,620 @@ class MoldsCompanion extends UpdateCompanion<Mold> {
           ..write('pressedAt: $pressedAt, ')
           ..write('remoldedFromId: $remoldedFromId, ')
           ..write('remoldedAt: $remoldedAt, ')
+          ..write('splitFromMoldId: $splitFromMoldId, ')
+          ..write('splitAt: $splitAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MoldTurnsTable extends MoldTurns
+    with TableInfo<$MoldTurnsTable, MoldTurn> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MoldTurnsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _moldIdMeta = const VerificationMeta('moldId');
+  @override
+  late final GeneratedColumn<String> moldId = GeneratedColumn<String>(
+    'mold_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vatIdMeta = const VerificationMeta('vatId');
+  @override
+  late final GeneratedColumn<String> vatId = GeneratedColumn<String>(
+    'vat_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _roundMeta = const VerificationMeta('round');
+  @override
+  late final GeneratedColumn<int> round = GeneratedColumn<int>(
+    'round',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<String> position = GeneratedColumn<String>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _turnedAtMeta = const VerificationMeta(
+    'turnedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> turnedAt = GeneratedColumn<DateTime>(
+    'turned_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordedAtMeta = const VerificationMeta(
+    'recordedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> recordedAt = GeneratedColumn<DateTime>(
+    'recorded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<TurnDamage, int> damage =
+      GeneratedColumn<int>(
+        'damage',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<TurnDamage>($MoldTurnsTable.$converterdamage);
+  static const VerificationMeta _pressPlateIdMeta = const VerificationMeta(
+    'pressPlateId',
+  );
+  @override
+  late final GeneratedColumn<String> pressPlateId = GeneratedColumn<String>(
+    'press_plate_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    moldId,
+    vatId,
+    round,
+    position,
+    turnedAt,
+    recordedAt,
+    damage,
+    pressPlateId,
+    note,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'mold_turns';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MoldTurn> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('mold_id')) {
+      context.handle(
+        _moldIdMeta,
+        moldId.isAcceptableOrUnknown(data['mold_id']!, _moldIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_moldIdMeta);
+    }
+    if (data.containsKey('vat_id')) {
+      context.handle(
+        _vatIdMeta,
+        vatId.isAcceptableOrUnknown(data['vat_id']!, _vatIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vatIdMeta);
+    }
+    if (data.containsKey('round')) {
+      context.handle(
+        _roundMeta,
+        round.isAcceptableOrUnknown(data['round']!, _roundMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_roundMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    if (data.containsKey('turned_at')) {
+      context.handle(
+        _turnedAtMeta,
+        turnedAt.isAcceptableOrUnknown(data['turned_at']!, _turnedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_turnedAtMeta);
+    }
+    if (data.containsKey('recorded_at')) {
+      context.handle(
+        _recordedAtMeta,
+        recordedAt.isAcceptableOrUnknown(data['recorded_at']!, _recordedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedAtMeta);
+    }
+    if (data.containsKey('press_plate_id')) {
+      context.handle(
+        _pressPlateIdMeta,
+        pressPlateId.isAcceptableOrUnknown(
+          data['press_plate_id']!,
+          _pressPlateIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MoldTurn map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MoldTurn(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      moldId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mold_id'],
+      )!,
+      vatId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vat_id'],
+      )!,
+      round: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}round'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}position'],
+      )!,
+      turnedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}turned_at'],
+      )!,
+      recordedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}recorded_at'],
+      )!,
+      damage: $MoldTurnsTable.$converterdamage.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}damage'],
+        )!,
+      ),
+      pressPlateId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}press_plate_id'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+    );
+  }
+
+  @override
+  $MoldTurnsTable createAlias(String alias) {
+    return $MoldTurnsTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<TurnDamage, int, int> $converterdamage =
+      const EnumIndexConverter<TurnDamage>(TurnDamage.values);
+}
+
+class MoldTurn extends DataClass implements Insertable<MoldTurn> {
+  final String id;
+  final String moldId;
+  final String vatId;
+  final int round;
+  final String position;
+  final DateTime turnedAt;
+  final DateTime recordedAt;
+  final TurnDamage damage;
+  final String? pressPlateId;
+  final String? note;
+  const MoldTurn({
+    required this.id,
+    required this.moldId,
+    required this.vatId,
+    required this.round,
+    required this.position,
+    required this.turnedAt,
+    required this.recordedAt,
+    required this.damage,
+    this.pressPlateId,
+    this.note,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['mold_id'] = Variable<String>(moldId);
+    map['vat_id'] = Variable<String>(vatId);
+    map['round'] = Variable<int>(round);
+    map['position'] = Variable<String>(position);
+    map['turned_at'] = Variable<DateTime>(turnedAt);
+    map['recorded_at'] = Variable<DateTime>(recordedAt);
+    {
+      map['damage'] = Variable<int>(
+        $MoldTurnsTable.$converterdamage.toSql(damage),
+      );
+    }
+    if (!nullToAbsent || pressPlateId != null) {
+      map['press_plate_id'] = Variable<String>(pressPlateId);
+    }
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    return map;
+  }
+
+  MoldTurnsCompanion toCompanion(bool nullToAbsent) {
+    return MoldTurnsCompanion(
+      id: Value(id),
+      moldId: Value(moldId),
+      vatId: Value(vatId),
+      round: Value(round),
+      position: Value(position),
+      turnedAt: Value(turnedAt),
+      recordedAt: Value(recordedAt),
+      damage: Value(damage),
+      pressPlateId: pressPlateId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pressPlateId),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+    );
+  }
+
+  factory MoldTurn.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MoldTurn(
+      id: serializer.fromJson<String>(json['id']),
+      moldId: serializer.fromJson<String>(json['moldId']),
+      vatId: serializer.fromJson<String>(json['vatId']),
+      round: serializer.fromJson<int>(json['round']),
+      position: serializer.fromJson<String>(json['position']),
+      turnedAt: serializer.fromJson<DateTime>(json['turnedAt']),
+      recordedAt: serializer.fromJson<DateTime>(json['recordedAt']),
+      damage: $MoldTurnsTable.$converterdamage.fromJson(
+        serializer.fromJson<int>(json['damage']),
+      ),
+      pressPlateId: serializer.fromJson<String?>(json['pressPlateId']),
+      note: serializer.fromJson<String?>(json['note']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'moldId': serializer.toJson<String>(moldId),
+      'vatId': serializer.toJson<String>(vatId),
+      'round': serializer.toJson<int>(round),
+      'position': serializer.toJson<String>(position),
+      'turnedAt': serializer.toJson<DateTime>(turnedAt),
+      'recordedAt': serializer.toJson<DateTime>(recordedAt),
+      'damage': serializer.toJson<int>(
+        $MoldTurnsTable.$converterdamage.toJson(damage),
+      ),
+      'pressPlateId': serializer.toJson<String?>(pressPlateId),
+      'note': serializer.toJson<String?>(note),
+    };
+  }
+
+  MoldTurn copyWith({
+    String? id,
+    String? moldId,
+    String? vatId,
+    int? round,
+    String? position,
+    DateTime? turnedAt,
+    DateTime? recordedAt,
+    TurnDamage? damage,
+    Value<String?> pressPlateId = const Value.absent(),
+    Value<String?> note = const Value.absent(),
+  }) => MoldTurn(
+    id: id ?? this.id,
+    moldId: moldId ?? this.moldId,
+    vatId: vatId ?? this.vatId,
+    round: round ?? this.round,
+    position: position ?? this.position,
+    turnedAt: turnedAt ?? this.turnedAt,
+    recordedAt: recordedAt ?? this.recordedAt,
+    damage: damage ?? this.damage,
+    pressPlateId: pressPlateId.present ? pressPlateId.value : this.pressPlateId,
+    note: note.present ? note.value : this.note,
+  );
+  MoldTurn copyWithCompanion(MoldTurnsCompanion data) {
+    return MoldTurn(
+      id: data.id.present ? data.id.value : this.id,
+      moldId: data.moldId.present ? data.moldId.value : this.moldId,
+      vatId: data.vatId.present ? data.vatId.value : this.vatId,
+      round: data.round.present ? data.round.value : this.round,
+      position: data.position.present ? data.position.value : this.position,
+      turnedAt: data.turnedAt.present ? data.turnedAt.value : this.turnedAt,
+      recordedAt: data.recordedAt.present
+          ? data.recordedAt.value
+          : this.recordedAt,
+      damage: data.damage.present ? data.damage.value : this.damage,
+      pressPlateId: data.pressPlateId.present
+          ? data.pressPlateId.value
+          : this.pressPlateId,
+      note: data.note.present ? data.note.value : this.note,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoldTurn(')
+          ..write('id: $id, ')
+          ..write('moldId: $moldId, ')
+          ..write('vatId: $vatId, ')
+          ..write('round: $round, ')
+          ..write('position: $position, ')
+          ..write('turnedAt: $turnedAt, ')
+          ..write('recordedAt: $recordedAt, ')
+          ..write('damage: $damage, ')
+          ..write('pressPlateId: $pressPlateId, ')
+          ..write('note: $note')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    moldId,
+    vatId,
+    round,
+    position,
+    turnedAt,
+    recordedAt,
+    damage,
+    pressPlateId,
+    note,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MoldTurn &&
+          other.id == this.id &&
+          other.moldId == this.moldId &&
+          other.vatId == this.vatId &&
+          other.round == this.round &&
+          other.position == this.position &&
+          other.turnedAt == this.turnedAt &&
+          other.recordedAt == this.recordedAt &&
+          other.damage == this.damage &&
+          other.pressPlateId == this.pressPlateId &&
+          other.note == this.note);
+}
+
+class MoldTurnsCompanion extends UpdateCompanion<MoldTurn> {
+  final Value<String> id;
+  final Value<String> moldId;
+  final Value<String> vatId;
+  final Value<int> round;
+  final Value<String> position;
+  final Value<DateTime> turnedAt;
+  final Value<DateTime> recordedAt;
+  final Value<TurnDamage> damage;
+  final Value<String?> pressPlateId;
+  final Value<String?> note;
+  final Value<int> rowid;
+  const MoldTurnsCompanion({
+    this.id = const Value.absent(),
+    this.moldId = const Value.absent(),
+    this.vatId = const Value.absent(),
+    this.round = const Value.absent(),
+    this.position = const Value.absent(),
+    this.turnedAt = const Value.absent(),
+    this.recordedAt = const Value.absent(),
+    this.damage = const Value.absent(),
+    this.pressPlateId = const Value.absent(),
+    this.note = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MoldTurnsCompanion.insert({
+    required String id,
+    required String moldId,
+    required String vatId,
+    required int round,
+    required String position,
+    required DateTime turnedAt,
+    required DateTime recordedAt,
+    required TurnDamage damage,
+    this.pressPlateId = const Value.absent(),
+    this.note = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       moldId = Value(moldId),
+       vatId = Value(vatId),
+       round = Value(round),
+       position = Value(position),
+       turnedAt = Value(turnedAt),
+       recordedAt = Value(recordedAt),
+       damage = Value(damage);
+  static Insertable<MoldTurn> custom({
+    Expression<String>? id,
+    Expression<String>? moldId,
+    Expression<String>? vatId,
+    Expression<int>? round,
+    Expression<String>? position,
+    Expression<DateTime>? turnedAt,
+    Expression<DateTime>? recordedAt,
+    Expression<int>? damage,
+    Expression<String>? pressPlateId,
+    Expression<String>? note,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (moldId != null) 'mold_id': moldId,
+      if (vatId != null) 'vat_id': vatId,
+      if (round != null) 'round': round,
+      if (position != null) 'position': position,
+      if (turnedAt != null) 'turned_at': turnedAt,
+      if (recordedAt != null) 'recorded_at': recordedAt,
+      if (damage != null) 'damage': damage,
+      if (pressPlateId != null) 'press_plate_id': pressPlateId,
+      if (note != null) 'note': note,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MoldTurnsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? moldId,
+    Value<String>? vatId,
+    Value<int>? round,
+    Value<String>? position,
+    Value<DateTime>? turnedAt,
+    Value<DateTime>? recordedAt,
+    Value<TurnDamage>? damage,
+    Value<String?>? pressPlateId,
+    Value<String?>? note,
+    Value<int>? rowid,
+  }) {
+    return MoldTurnsCompanion(
+      id: id ?? this.id,
+      moldId: moldId ?? this.moldId,
+      vatId: vatId ?? this.vatId,
+      round: round ?? this.round,
+      position: position ?? this.position,
+      turnedAt: turnedAt ?? this.turnedAt,
+      recordedAt: recordedAt ?? this.recordedAt,
+      damage: damage ?? this.damage,
+      pressPlateId: pressPlateId ?? this.pressPlateId,
+      note: note ?? this.note,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (moldId.present) {
+      map['mold_id'] = Variable<String>(moldId.value);
+    }
+    if (vatId.present) {
+      map['vat_id'] = Variable<String>(vatId.value);
+    }
+    if (round.present) {
+      map['round'] = Variable<int>(round.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<String>(position.value);
+    }
+    if (turnedAt.present) {
+      map['turned_at'] = Variable<DateTime>(turnedAt.value);
+    }
+    if (recordedAt.present) {
+      map['recorded_at'] = Variable<DateTime>(recordedAt.value);
+    }
+    if (damage.present) {
+      map['damage'] = Variable<int>(
+        $MoldTurnsTable.$converterdamage.toSql(damage.value),
+      );
+    }
+    if (pressPlateId.present) {
+      map['press_plate_id'] = Variable<String>(pressPlateId.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoldTurnsCompanion(')
+          ..write('id: $id, ')
+          ..write('moldId: $moldId, ')
+          ..write('vatId: $vatId, ')
+          ..write('round: $round, ')
+          ..write('position: $position, ')
+          ..write('turnedAt: $turnedAt, ')
+          ..write('recordedAt: $recordedAt, ')
+          ..write('damage: $damage, ')
+          ..write('pressPlateId: $pressPlateId, ')
+          ..write('note: $note, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4023,6 +4742,7 @@ abstract class _$CheeseTraceDatabase extends GeneratedDatabase {
   late final $WheyTransfersTable wheyTransfers = $WheyTransfersTable(this);
   late final $MoldBatchesTable moldBatches = $MoldBatchesTable(this);
   late final $MoldsTable molds = $MoldsTable(this);
+  late final $MoldTurnsTable moldTurns = $MoldTurnsTable(this);
   late final $LabSamplesTable labSamples = $LabSamplesTable(this);
   late final $CurdPhotosTable curdPhotos = $CurdPhotosTable(this);
   @override
@@ -4037,6 +4757,7 @@ abstract class _$CheeseTraceDatabase extends GeneratedDatabase {
     wheyTransfers,
     moldBatches,
     molds,
+    moldTurns,
     labSamples,
     curdPhotos,
   ];
@@ -5375,6 +6096,8 @@ typedef $$MoldsTableCreateCompanionBuilder =
       Value<DateTime?> pressedAt,
       Value<String?> remoldedFromId,
       Value<DateTime?> remoldedAt,
+      Value<String?> splitFromMoldId,
+      Value<DateTime?> splitAt,
       Value<int> rowid,
     });
 typedef $$MoldsTableUpdateCompanionBuilder =
@@ -5388,6 +6111,8 @@ typedef $$MoldsTableUpdateCompanionBuilder =
       Value<DateTime?> pressedAt,
       Value<String?> remoldedFromId,
       Value<DateTime?> remoldedAt,
+      Value<String?> splitFromMoldId,
+      Value<DateTime?> splitAt,
       Value<int> rowid,
     });
 
@@ -5442,6 +6167,16 @@ class $$MoldsTableFilterComposer
 
   ColumnFilters<DateTime> get remoldedAt => $composableBuilder(
     column: $table.remoldedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get splitFromMoldId => $composableBuilder(
+    column: $table.splitFromMoldId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get splitAt => $composableBuilder(
+    column: $table.splitAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5499,6 +6234,16 @@ class $$MoldsTableOrderingComposer
     column: $table.remoldedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get splitFromMoldId => $composableBuilder(
+    column: $table.splitFromMoldId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get splitAt => $composableBuilder(
+    column: $table.splitAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MoldsTableAnnotationComposer
@@ -5540,6 +6285,14 @@ class $$MoldsTableAnnotationComposer
     column: $table.remoldedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get splitFromMoldId => $composableBuilder(
+    column: $table.splitFromMoldId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get splitAt =>
+      $composableBuilder(column: $table.splitAt, builder: (column) => column);
 }
 
 class $$MoldsTableTableManager
@@ -5579,6 +6332,8 @@ class $$MoldsTableTableManager
                 Value<DateTime?> pressedAt = const Value.absent(),
                 Value<String?> remoldedFromId = const Value.absent(),
                 Value<DateTime?> remoldedAt = const Value.absent(),
+                Value<String?> splitFromMoldId = const Value.absent(),
+                Value<DateTime?> splitAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MoldsCompanion(
                 id: id,
@@ -5590,6 +6345,8 @@ class $$MoldsTableTableManager
                 pressedAt: pressedAt,
                 remoldedFromId: remoldedFromId,
                 remoldedAt: remoldedAt,
+                splitFromMoldId: splitFromMoldId,
+                splitAt: splitAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5603,6 +6360,8 @@ class $$MoldsTableTableManager
                 Value<DateTime?> pressedAt = const Value.absent(),
                 Value<String?> remoldedFromId = const Value.absent(),
                 Value<DateTime?> remoldedAt = const Value.absent(),
+                Value<String?> splitFromMoldId = const Value.absent(),
+                Value<DateTime?> splitAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MoldsCompanion.insert(
                 id: id,
@@ -5614,6 +6373,8 @@ class $$MoldsTableTableManager
                 pressedAt: pressedAt,
                 remoldedFromId: remoldedFromId,
                 remoldedAt: remoldedAt,
+                splitFromMoldId: splitFromMoldId,
+                splitAt: splitAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -5636,6 +6397,306 @@ typedef $$MoldsTableProcessedTableManager =
       $$MoldsTableUpdateCompanionBuilder,
       (Mold, BaseReferences<_$CheeseTraceDatabase, $MoldsTable, Mold>),
       Mold,
+      PrefetchHooks Function()
+    >;
+typedef $$MoldTurnsTableCreateCompanionBuilder =
+    MoldTurnsCompanion Function({
+      required String id,
+      required String moldId,
+      required String vatId,
+      required int round,
+      required String position,
+      required DateTime turnedAt,
+      required DateTime recordedAt,
+      required TurnDamage damage,
+      Value<String?> pressPlateId,
+      Value<String?> note,
+      Value<int> rowid,
+    });
+typedef $$MoldTurnsTableUpdateCompanionBuilder =
+    MoldTurnsCompanion Function({
+      Value<String> id,
+      Value<String> moldId,
+      Value<String> vatId,
+      Value<int> round,
+      Value<String> position,
+      Value<DateTime> turnedAt,
+      Value<DateTime> recordedAt,
+      Value<TurnDamage> damage,
+      Value<String?> pressPlateId,
+      Value<String?> note,
+      Value<int> rowid,
+    });
+
+class $$MoldTurnsTableFilterComposer
+    extends Composer<_$CheeseTraceDatabase, $MoldTurnsTable> {
+  $$MoldTurnsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get moldId => $composableBuilder(
+    column: $table.moldId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vatId => $composableBuilder(
+    column: $table.vatId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get round => $composableBuilder(
+    column: $table.round,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get turnedAt => $composableBuilder(
+    column: $table.turnedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<TurnDamage, TurnDamage, int> get damage =>
+      $composableBuilder(
+        column: $table.damage,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get pressPlateId => $composableBuilder(
+    column: $table.pressPlateId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MoldTurnsTableOrderingComposer
+    extends Composer<_$CheeseTraceDatabase, $MoldTurnsTable> {
+  $$MoldTurnsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get moldId => $composableBuilder(
+    column: $table.moldId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vatId => $composableBuilder(
+    column: $table.vatId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get round => $composableBuilder(
+    column: $table.round,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get turnedAt => $composableBuilder(
+    column: $table.turnedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get damage => $composableBuilder(
+    column: $table.damage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pressPlateId => $composableBuilder(
+    column: $table.pressPlateId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MoldTurnsTableAnnotationComposer
+    extends Composer<_$CheeseTraceDatabase, $MoldTurnsTable> {
+  $$MoldTurnsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get moldId =>
+      $composableBuilder(column: $table.moldId, builder: (column) => column);
+
+  GeneratedColumn<String> get vatId =>
+      $composableBuilder(column: $table.vatId, builder: (column) => column);
+
+  GeneratedColumn<int> get round =>
+      $composableBuilder(column: $table.round, builder: (column) => column);
+
+  GeneratedColumn<String> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get turnedAt =>
+      $composableBuilder(column: $table.turnedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<TurnDamage, int> get damage =>
+      $composableBuilder(column: $table.damage, builder: (column) => column);
+
+  GeneratedColumn<String> get pressPlateId => $composableBuilder(
+    column: $table.pressPlateId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+}
+
+class $$MoldTurnsTableTableManager
+    extends
+        RootTableManager<
+          _$CheeseTraceDatabase,
+          $MoldTurnsTable,
+          MoldTurn,
+          $$MoldTurnsTableFilterComposer,
+          $$MoldTurnsTableOrderingComposer,
+          $$MoldTurnsTableAnnotationComposer,
+          $$MoldTurnsTableCreateCompanionBuilder,
+          $$MoldTurnsTableUpdateCompanionBuilder,
+          (
+            MoldTurn,
+            BaseReferences<_$CheeseTraceDatabase, $MoldTurnsTable, MoldTurn>,
+          ),
+          MoldTurn,
+          PrefetchHooks Function()
+        > {
+  $$MoldTurnsTableTableManager(_$CheeseTraceDatabase db, $MoldTurnsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MoldTurnsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MoldTurnsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MoldTurnsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> moldId = const Value.absent(),
+                Value<String> vatId = const Value.absent(),
+                Value<int> round = const Value.absent(),
+                Value<String> position = const Value.absent(),
+                Value<DateTime> turnedAt = const Value.absent(),
+                Value<DateTime> recordedAt = const Value.absent(),
+                Value<TurnDamage> damage = const Value.absent(),
+                Value<String?> pressPlateId = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MoldTurnsCompanion(
+                id: id,
+                moldId: moldId,
+                vatId: vatId,
+                round: round,
+                position: position,
+                turnedAt: turnedAt,
+                recordedAt: recordedAt,
+                damage: damage,
+                pressPlateId: pressPlateId,
+                note: note,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String moldId,
+                required String vatId,
+                required int round,
+                required String position,
+                required DateTime turnedAt,
+                required DateTime recordedAt,
+                required TurnDamage damage,
+                Value<String?> pressPlateId = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MoldTurnsCompanion.insert(
+                id: id,
+                moldId: moldId,
+                vatId: vatId,
+                round: round,
+                position: position,
+                turnedAt: turnedAt,
+                recordedAt: recordedAt,
+                damage: damage,
+                pressPlateId: pressPlateId,
+                note: note,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MoldTurnsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$CheeseTraceDatabase,
+      $MoldTurnsTable,
+      MoldTurn,
+      $$MoldTurnsTableFilterComposer,
+      $$MoldTurnsTableOrderingComposer,
+      $$MoldTurnsTableAnnotationComposer,
+      $$MoldTurnsTableCreateCompanionBuilder,
+      $$MoldTurnsTableUpdateCompanionBuilder,
+      (
+        MoldTurn,
+        BaseReferences<_$CheeseTraceDatabase, $MoldTurnsTable, MoldTurn>,
+      ),
+      MoldTurn,
       PrefetchHooks Function()
     >;
 typedef $$LabSamplesTableCreateCompanionBuilder =
@@ -6183,6 +7244,8 @@ class $CheeseTraceDatabaseManager {
       $$MoldBatchesTableTableManager(_db, _db.moldBatches);
   $$MoldsTableTableManager get molds =>
       $$MoldsTableTableManager(_db, _db.molds);
+  $$MoldTurnsTableTableManager get moldTurns =>
+      $$MoldTurnsTableTableManager(_db, _db.moldTurns);
   $$LabSamplesTableTableManager get labSamples =>
       $$LabSamplesTableTableManager(_db, _db.labSamples);
   $$CurdPhotosTableTableManager get curdPhotos =>

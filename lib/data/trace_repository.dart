@@ -5,6 +5,7 @@ import '../core/models/curd_photo.dart';
 import '../core/models/finding.dart';
 import '../core/models/lab_sample.dart';
 import '../core/models/mold.dart';
+import '../core/models/mold_turn.dart';
 import '../core/models/process_version.dart';
 import '../core/models/whey.dart' as core;
 import '../core/rules/rule.dart';
@@ -106,6 +107,20 @@ class TraceRepository {
   /// 换模：写入新模具并挂接原模具链。
   Future<void> remold(MoldRecord newMold) => recordMold(newMold);
 
+  /// 翻模：记录一轮一次翻面（模具、位置、实际时刻、破损观察）。
+  Future<void> recordTurn(MoldTurn turn) =>
+      _db.into(_db.moldTurns).insert(turnToCompanion(turn));
+
+  /// 翻模 + 裂件登记事务：奶酪裂成两件时，翻模记录与第二件模具一并落库。
+  Future<void> recordTurnWithSplitPiece({
+    required MoldTurn turn,
+    required MoldRecord piece,
+  }) =>
+      _db.transaction(() async {
+        await recordTurn(turn);
+        await recordMold(piece);
+      });
+
   Future<void> recordSample(LabSample sample) =>
       _db.into(_db.labSamples).insert(sampleToCompanion(sample));
 
@@ -148,6 +163,27 @@ class TraceRepository {
     return row == null ? null : moldFromRow(row);
   }
 
+  /// 某奶槽的全部翻模记录（按轮次与实际时刻排序）。
+  Future<List<MoldTurn>> turnsForVat(String vatId) async {
+    final rows = await (_db.select(_db.moldTurns)
+          ..where((t) => t.vatId.equals(vatId))
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.round),
+            (t) => OrderingTerm.asc(t.turnedAt),
+          ]))
+        .get();
+    return rows.map(turnFromRow).toList();
+  }
+
+  /// 某模具的翻模记录（轮次升序）。
+  Future<List<MoldTurn>> turnsForMold(String moldId) async {
+    final rows = await (_db.select(_db.moldTurns)
+          ..where((t) => t.moldId.equals(moldId))
+          ..orderBy([(t) => OrderingTerm.asc(t.round)]))
+        .get();
+    return rows.map(turnFromRow).toList();
+  }
+
   // ---------- 规则检查 ----------
 
   /// 汇总某工艺版本下全部追溯数据并运行所有工位规则。
@@ -183,6 +219,9 @@ class TraceRepository {
     final molds = await (_db.select(_db.molds)
           ..where((m) => m.vatId.equals(vatId)))
         .get();
+    final turns = await (_db.select(_db.moldTurns)
+          ..where((t) => t.vatId.equals(vatId)))
+        .get();
     final samples = await (_db.select(_db.labSamples)
           ..where((s) => s.vatId.equals(vatId)))
         .get();
@@ -195,6 +234,7 @@ class TraceRepository {
       events: eventRows.map(actionEventFromRow).toList(),
       transfers: transfers.map(transferFromRow).toList(),
       molds: molds.map(moldFromRow).toList(),
+      turns: turns.map(turnFromRow).toList(),
       samples: samples.map(sampleFromRow).toList(),
       photos: photos.map(photoFromRow).toList(),
     );
@@ -213,6 +253,7 @@ class TraceRepository {
 
     final transfers = await _db.select(_db.wheyTransfers).get();
     final molds = await _db.select(_db.molds).get();
+    final turns = await _db.select(_db.moldTurns).get();
     final samples = await _db.select(_db.labSamples).get();
     final photos = await _db.select(_db.curdPhotos).get();
 
@@ -224,6 +265,10 @@ class TraceRepository {
       molds: molds
           .where((m) => vatIds.contains(m.vatId))
           .map(moldFromRow)
+          .toList(),
+      turns: turns
+          .where((t) => vatIds.contains(t.vatId))
+          .map(turnFromRow)
           .toList(),
       samples: samples
           .where((s) => vatIds.contains(s.vatId))

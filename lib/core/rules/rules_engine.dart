@@ -5,6 +5,7 @@ import 'remold_rule.dart';
 import 'rule.dart';
 import 'sample_delay_rule.dart';
 import 'sequence_rule.dart';
+import 'turn_rule.dart';
 import 'whey_merge_rule.dart';
 
 /// 规则引擎：对追溯上下文执行全部工位规则，汇总检查发现。
@@ -20,6 +21,7 @@ class RulesEngine {
               MoldSplitRule(),
               RemoldRule(),
               SampleDelayRule(),
+              TurnRule(),
             ];
 
   final List<StationRule> rules;

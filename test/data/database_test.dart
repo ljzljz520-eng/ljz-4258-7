@@ -3,6 +3,7 @@ import 'package:cheese_trace/core/models/curd_photo.dart';
 import 'package:cheese_trace/core/models/enums.dart';
 import 'package:cheese_trace/core/models/lab_sample.dart';
 import 'package:cheese_trace/core/models/mold.dart';
+import 'package:cheese_trace/core/models/mold_turn.dart';
 import 'package:cheese_trace/core/models/process_version.dart';
 import 'package:cheese_trace/core/models/whey.dart';
 import 'package:cheese_trace/data/db/database.dart'
@@ -159,5 +160,82 @@ void main() {
     await repo.recordMold(const MoldRecord(
         id: 'M9', batchId: 'B9', vatId: 'VAT-1', qrCode: 'QR-M9'));
     expect((await repo.findMoldByQr('QR-M9'))?.id, 'M9');
+  });
+
+  test('翻模落库读回 + 裂件事务 + 规则复核', () async {
+    await repo.splitIntoMolds(
+      batchId: 'B1',
+      batchCode: '批B1',
+      vatId: 'VAT-1',
+      createdAt: DateTime(2026, 9, 11, 10),
+      molds: [
+        MoldRecord(
+            id: 'M1',
+            batchId: 'B1',
+            vatId: 'VAT-1',
+            qrCode: 'QR-M1',
+            moldedAt: DateTime(2026, 9, 11, 10)),
+        MoldRecord(
+            id: 'M2',
+            batchId: 'B1',
+            vatId: 'VAT-1',
+            qrCode: 'QR-M2',
+            moldedAt: DateTime(2026, 9, 11, 10)),
+      ],
+    );
+    // M1 翻到第 2 轮（第 2 轮换压板），M2 只翻第 1 轮 → M2 漏翻。
+    final t1 = DateTime(2026, 9, 11, 11);
+    await repo.recordTurn(MoldTurn(
+        id: 'T1',
+        moldId: 'M1',
+        vatId: 'VAT-1',
+        round: 1,
+        position: 'R1-A',
+        turnedAt: t1,
+        recordedAt: t1,
+        pressPlateId: 'PL-1'));
+    // 裂成两件：翻模与第二件模具一并落库。
+    await repo.recordTurnWithSplitPiece(
+      turn: MoldTurn(
+          id: 'T2',
+          moldId: 'M1',
+          vatId: 'VAT-1',
+          round: 2,
+          position: 'R1-B',
+          turnedAt: t1.add(const Duration(hours: 1)),
+          recordedAt: t1.add(const Duration(hours: 1)),
+          damage: TurnDamage.splitInTwo,
+          pressPlateId: 'PL-2'),
+      piece: MoldRecord(
+          id: 'M1-B',
+          batchId: 'B1',
+          vatId: 'VAT-1',
+          qrCode: 'QR-M1-B',
+          splitFromMoldId: 'M1',
+          splitAt: t1.add(const Duration(hours: 1))),
+    );
+    await repo.recordTurn(MoldTurn(
+        id: 'T3',
+        moldId: 'M2',
+        vatId: 'VAT-1',
+        round: 1,
+        position: 'R2-A',
+        turnedAt: t1,
+        recordedAt: t1));
+
+    // 读回：按轮次排序，裂件链接完整。
+    final turns = await repo.turnsForVat('VAT-1');
+    expect(turns.map((t) => t.id), ['T1', 'T3', 'T2']);
+    expect((await repo.findMoldById('M1-B'))?.splitFromMoldId, 'M1');
+
+    // 规则复核：漏翻（仅 M2）+ 换压板 + 裂件登记留痕。
+    final findings = await repo.checkVat('VAT-1');
+    final codes = findings.map((f) => f.code).toSet();
+    expect(codes, containsAll(
+        {'TURN_MISSED', 'TURN_PLATE_CHANGED', 'TURN_SPLIT_REGISTERED'}));
+    final missed = findings.firstWhere((f) => f.code == 'TURN_MISSED');
+    expect(missed.relatedIds, {'M2'});
+    // 裂件已登记 → 不再报未登记。
+    expect(codes.contains('TURN_SPLIT_PENDING'), isFalse);
   });
 }

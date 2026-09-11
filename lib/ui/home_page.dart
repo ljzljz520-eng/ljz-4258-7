@@ -10,6 +10,7 @@ import 'photo/curd_photo_page.dart';
 import 'scan/qr_scan_page.dart';
 import 'split/mold_split_page.dart';
 import 'timeline/curd_timeline_page.dart';
+import 'turn/mold_turn_page.dart';
 import 'whey/whey_transfer_page.dart';
 
 /// 扫码后按对象类型形成实际关联：
@@ -67,6 +68,18 @@ Future<void> _showMoldSheet(BuildContext context, MoldRecord mold) {
           if (mold.isRemold)
             Text('由 ${mold.remoldedFromId} 换模而来（${fmt(mold.remoldedAt)}）'),
           const SizedBox(height: 16),
+          FilledButton.icon(
+            icon: const Icon(Icons.flip),
+            label: const Text('记录翻模'),
+            onPressed: () {
+              Navigator.of(sheetContext).pop();
+              Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => MoldTurnPage(
+                    presetVatId: mold.vatId, presetMoldId: mold.id),
+              ));
+            },
+          ),
+          const SizedBox(height: 8),
           FilledButton.icon(
             icon: const Icon(Icons.swap_horiz),
             label: const Text('记录换模'),
@@ -141,6 +154,14 @@ class HomePage extends StatelessWidget {
                   label: const Text('换模记录'),
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(builder: (_) => const RemoldPage()),
+                  ),
+                ),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.flip),
+                  label: const Text('翻模记录'),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                        builder: (_) => const MoldTurnPage()),
                   ),
                 ),
                 OutlinedButton.icon(

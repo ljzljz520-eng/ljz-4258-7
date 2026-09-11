@@ -15,6 +15,7 @@ part 'database.g.dart';
   WheyTransfers,
   MoldBatches,
   Molds,
+  MoldTurns,
   LabSamples,
   CurdPhotos,
 ])
@@ -30,5 +31,17 @@ class CheeseTraceDatabase extends _$CheeseTraceDatabase {
   CheeseTraceDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            // v2：翻模轮次表 + 模具裂件分件链。
+            await m.createTable(moldTurns);
+            await m.addColumn(molds, molds.splitFromMoldId);
+            await m.addColumn(molds, molds.splitAt);
+          }
+        },
+      );
 }

@@ -46,6 +46,7 @@ class QaTolerances {
     this.maxMoldWeightSpreadPct,
     this.maxSampleDelay,
     this.allowWheyTankMixing = false,
+    this.maxTurnRecordDelay,
   });
 
   /// 同一槽内不同位置凝乳粒径允许的最大差值（mm）。
@@ -59,4 +60,8 @@ class QaTolerances {
 
   /// 是否允许多槽乳清汇入同一乳清罐（默认不允许，混入即报警）。
   final bool allowWheyTankMixing;
+
+  /// 翻模记录允许的最大补录时延（实际翻面 → 落库）。
+  /// 超过即视为夜班补录等延迟记录，需人工确认；未录入则不检查。
+  final Duration? maxTurnRecordDelay;
 }

@@ -7,6 +7,7 @@ import '../../core/models/curd_photo.dart';
 import '../../core/models/enums.dart';
 import '../../core/models/lab_sample.dart';
 import '../../core/models/mold.dart';
+import '../../core/models/mold_turn.dart';
 import '../../core/models/process_version.dart';
 import '../../core/models/whey.dart' as core;
 import 'database.dart' as db;
@@ -28,6 +29,8 @@ db.ProcessVersionsCompanion processVersionToCompanion(ProcessVersion v) =>
         'maxMoldWeightSpreadPct': v.tolerances.maxMoldWeightSpreadPct,
         'maxSampleDelayMinutes': v.tolerances.maxSampleDelay?.inMinutes,
         'allowWheyTankMixing': v.tolerances.allowWheyTankMixing,
+        'maxTurnRecordDelayMinutes':
+            v.tolerances.maxTurnRecordDelay?.inMinutes,
       })),
     );
 
@@ -46,11 +49,14 @@ ProcessVersion processVersionFromRow(db.ProcessVersion row) => ProcessVersion(
 QaTolerances _tolerancesFromJson(String jsonStr) {
   final m = jsonDecode(jsonStr) as Map<String, dynamic>;
   final delayMin = m['maxSampleDelayMinutes'] as int?;
+  final turnDelayMin = m['maxTurnRecordDelayMinutes'] as int?;
   return QaTolerances(
     maxGrainSizeDiffMm: (m['maxGrainSizeDiffMm'] as num?)?.toDouble(),
     maxMoldWeightSpreadPct: (m['maxMoldWeightSpreadPct'] as num?)?.toDouble(),
     maxSampleDelay: delayMin == null ? null : Duration(minutes: delayMin),
     allowWheyTankMixing: m['allowWheyTankMixing'] as bool? ?? false,
+    maxTurnRecordDelay:
+        turnDelayMin == null ? null : Duration(minutes: turnDelayMin),
   );
 }
 
@@ -116,6 +122,8 @@ db.MoldsCompanion moldToCompanion(MoldRecord m) => db.MoldsCompanion(
       pressedAt: Value(m.pressedAt),
       remoldedFromId: Value(m.remoldedFromId),
       remoldedAt: Value(m.remoldedAt),
+      splitFromMoldId: Value(m.splitFromMoldId),
+      splitAt: Value(m.splitAt),
     );
 
 MoldRecord moldFromRow(db.Mold row) => MoldRecord(
@@ -128,6 +136,36 @@ MoldRecord moldFromRow(db.Mold row) => MoldRecord(
       pressedAt: row.pressedAt,
       remoldedFromId: row.remoldedFromId,
       remoldedAt: row.remoldedAt,
+      splitFromMoldId: row.splitFromMoldId,
+      splitAt: row.splitAt,
+    );
+
+// ---------- 翻模轮次 ----------
+
+db.MoldTurnsCompanion turnToCompanion(MoldTurn t) => db.MoldTurnsCompanion(
+      id: Value(t.id),
+      moldId: Value(t.moldId),
+      vatId: Value(t.vatId),
+      round: Value(t.round),
+      position: Value(t.position),
+      turnedAt: Value(t.turnedAt),
+      recordedAt: Value(t.recordedAt),
+      damage: Value(t.damage),
+      pressPlateId: Value(t.pressPlateId),
+      note: Value(t.note),
+    );
+
+MoldTurn turnFromRow(db.MoldTurn row) => MoldTurn(
+      id: row.id,
+      moldId: row.moldId,
+      vatId: row.vatId,
+      round: row.round,
+      position: row.position,
+      turnedAt: row.turnedAt,
+      recordedAt: row.recordedAt,
+      damage: row.damage,
+      pressPlateId: row.pressPlateId,
+      note: row.note,
     );
 
 // ---------- 实验室样品 ----------

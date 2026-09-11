@@ -18,6 +18,7 @@ Future<void> seedDemoIfEmpty(TraceRepository repo) async {
       maxGrainSizeDiffMm: 2.0,
       maxMoldWeightSpreadPct: 5.0,
       maxSampleDelay: Duration(minutes: 30),
+      maxTurnRecordDelay: Duration(minutes: 15),
     ),
   ));
   await repo.addVat('VAT-1', '1号凝乳槽', 'QR-VAT-1',

@@ -40,6 +40,18 @@ enum VisualState {
   final String label;
 }
 
+/// 翻模时的破损/异常观察（操作员目视记录，不含工艺建议）。
+enum TurnDamage {
+  none('无破损'),
+  crack('表面裂纹'),
+  deformed('变形'),
+  labelCovered('标签被遮住'),
+  splitInTwo('裂成两件');
+
+  const TurnDamage(this.label);
+  final String label;
+}
+
 /// 检查结果严重度。
 enum Severity {
   info('提示'),
