@@ -1,0 +1,28 @@
+name: cheese_trace
+description: 奶酪制作追溯系统 —— 工位规则、凝乳时间轴、模具拆分、离线记录与一致性检查。
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.13.0
+  flutter: '>=3.47.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  drift: ^2.29.0
+  drift_flutter: ^0.2.7
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  mobile_scanner: ^7.1.3
+  camera: ^0.11.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  drift_dev: ^2.29.0
+  build_runner: ^2.4.13
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
