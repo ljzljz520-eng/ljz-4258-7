@@ -21,9 +21,12 @@ lib/
 │   ├── db/                   # Drift 离线库：奶槽/工步/模具/乳清罐/样品/照片（SQLite）
 │   └── trace_repository.dart # 读写 + 规则检查入口
 └── ui/                       # Flutter 界面
-    ├── timeline/             # 凝乳时间轴（动作时点、温度、目视状态、检查发现）
+    ├── timeline/             # 凝乳时间轴（工步按钮弹观测录入：温度/目视/位置/切块/备注）
     ├── split/                # 模具拆分（逐模称重、实时离散度对照容差）
-    ├── scan/                 # 二维码扫描（凝乳槽 / 乳清罐 / 模具）
+    ├── scan/                 # 二维码扫描（凝乳槽 / 乳清罐 / 模具，扫码后形成实际关联）
+    ├── whey/                 # 乳清转移记录（奶槽 → 乳清罐去向）
+    ├── lab/                  # 实验室样品录入（水分/酸度，按工步关联）
+    ├── mold/                 # 换模记录（新模具挂接原模具链）
     └── photo/                # 相机拍照（标准背景参考框 + 槽内位置）
 ```
 
@@ -32,7 +35,9 @@ lib/
 - **可追溯时点**：操作员按下工步按钮的时刻即 `performedAt`，落库不可改；
   所有动作挂在制酪师冻结的工艺版本之下，事后按当时版本复核。
 - **二维码关联**：`Vats.qrCode` / `WheyTanks.qrCode` / `Molds.qrCode` 唯一，
-  扫码页依次解析三类对象。
+  扫码页依次解析三类对象；扫码结果在主页形成实际关联——
+  奶槽 → 打开其时间轴，乳清罐 → 记录乳清去向（预选该罐），
+  模具 → 展示详情并可跳转换模。
 - **离线优先**：Drift(SQLite) 本地存储，无网络依赖。
 - **影响水分的因素全部留痕**：切块尺寸（`cutSizeMm`）、槽内位置（`VatZone`）、
   乳清去向（`WheyTransfers`）、模具批（`MoldBatches`/`Molds`），
@@ -55,7 +60,7 @@ lib/
 flutter pub get
 dart run build_runner build   # 重新生成 Drift 代码
 flutter analyze
-flutter test                  # 26 项测试：规则 20 + 数据库 3 + UI 3
+flutter test                  # 35 项测试：规则 20 + 数据库 3 + UI 12
 ```
 
 注：`test/` 中 Drift 使用 `NativeDatabase.memory()`；widget 测试里

@@ -38,6 +38,13 @@ class _CurdTimelinePageState extends State<CurdTimelinePage> {
   Future<void> _recordStep(StepKind step) async {
     final versions = await _repo.listVersions();
     if (versions.isEmpty || !mounted) return;
+    // 弹出工艺观测录入：温度 / 目视状态 / 槽内位置 / 切块尺寸 / 备注。
+    // 操作员也可选择「直接记录」跳过观测，仅落可追溯时点。
+    final observation = await showDialog<StepObservation>(
+      context: context,
+      builder: (_) => StepObservationDialog(step: step),
+    );
+    if (observation == null || !mounted) return; // 取消：不记录
     final event = ActionEvent(
       id: 'EV-${DateTime.now().microsecondsSinceEpoch}',
       vatId: widget.vatId,
@@ -45,6 +52,11 @@ class _CurdTimelinePageState extends State<CurdTimelinePage> {
       performedAt: DateTime.now(), // 手工动作时点：按下即记录，可追溯
       operatorId: 'operator-local',
       processVersionId: versions.first.id,
+      temperatureC: observation.temperatureC,
+      visualState: observation.visualState,
+      cutSizeMm: observation.cutSizeMm,
+      zone: observation.zone,
+      note: observation.note,
     );
     await _repo.recordAction(event);
     await _refreshFindings();
@@ -107,6 +119,142 @@ class _StepButtons extends StatelessWidget {
   }
 }
 
+/// 操作员在工步按钮上录入的工艺观测（全部可空，纯记录值）。
+class StepObservation {
+  const StepObservation({
+    this.temperatureC,
+    this.visualState,
+    this.cutSizeMm,
+    this.zone,
+    this.note,
+  });
+
+  final double? temperatureC;
+  final VisualState? visualState;
+  final double? cutSizeMm;
+  final VatZone? zone;
+  final String? note;
+}
+
+/// 工步观测录入对话框：按下工步按钮后弹出，
+/// 「记录观测」携带观测落库，「直接记录」仅落时点，「取消」不记录。
+class StepObservationDialog extends StatefulWidget {
+  const StepObservationDialog({super.key, required this.step});
+
+  final StepKind step;
+
+  @override
+  State<StepObservationDialog> createState() => _StepObservationDialogState();
+}
+
+class _StepObservationDialogState extends State<StepObservationDialog> {
+  final _tempCtrl = TextEditingController();
+  final _cutSizeCtrl = TextEditingController();
+  final _noteCtrl = TextEditingController();
+  VisualState? _visualState;
+  VatZone? _zone;
+
+  @override
+  void dispose() {
+    _tempCtrl.dispose();
+    _cutSizeCtrl.dispose();
+    _noteCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submit({required bool withObservation}) {
+    if (!withObservation) {
+      Navigator.of(context).pop(const StepObservation());
+      return;
+    }
+    Navigator.of(context).pop(StepObservation(
+      temperatureC: double.tryParse(_tempCtrl.text.trim()),
+      visualState: _visualState,
+      cutSizeMm: double.tryParse(_cutSizeCtrl.text.trim()),
+      zone: _zone,
+      note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('记录 · ${widget.step.label}'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _tempCtrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: '实测温度 (℃)',
+                hintText: '可空',
+              ),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<VisualState>(
+              initialValue: _visualState,
+              decoration: const InputDecoration(labelText: '目视状态'),
+              items: [
+                for (final s in VisualState.values)
+                  DropdownMenuItem(value: s, child: Text(s.label)),
+              ],
+              onChanged: (v) => setState(() => _visualState = v),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<VatZone>(
+              initialValue: _zone,
+              decoration: const InputDecoration(labelText: '槽内位置'),
+              items: [
+                for (final z in VatZone.values)
+                  DropdownMenuItem(value: z, child: Text(z.label)),
+              ],
+              onChanged: (v) => setState(() => _zone = v),
+            ),
+            // 切块尺寸仅在切割工步录入。
+            if (widget.step == StepKind.cutting) ...[
+              const SizedBox(height: 8),
+              TextField(
+                controller: _cutSizeCtrl,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: '切块尺寸 (mm)',
+                  hintText: '可空',
+                ),
+              ),
+            ],
+            const SizedBox(height: 8),
+            TextField(
+              controller: _noteCtrl,
+              decoration: const InputDecoration(
+                labelText: '备注',
+                hintText: '可空',
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
+        TextButton(
+          onPressed: () => _submit(withObservation: false),
+          child: const Text('直接记录'),
+        ),
+        FilledButton(
+          onPressed: () => _submit(withObservation: true),
+          child: const Text('记录观测'),
+        ),
+      ],
+    );
+  }
+}
+
 class _TimelineTile extends StatelessWidget {
   const _TimelineTile({required this.event, required this.isLast});
 
@@ -147,6 +295,8 @@ class _TimelineTile extends StatelessWidget {
                 if (event.cutSizeMm != null)
                   '切块 ${event.cutSizeMm!.toStringAsFixed(0)}mm',
                 if (event.zone != null) event.zone!.label,
+                if (event.note != null && event.note!.isNotEmpty)
+                  '备注：${event.note}',
               ].join(' · ')),
             ),
           ),

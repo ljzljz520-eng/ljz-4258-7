@@ -30,6 +30,21 @@ void main() {
     await tester.pump();
   }
 
+  Future<void> teardownPage(WidgetTester tester) async {
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 1));
+  }
+
+  /// 工步按钮先经真实异步读取冻结版本再弹观测对话框，
+  /// 需 runAsync 让 Drift 操作完成（FakeAsync 区限制）。
+  Future<void> tapStepAndWaitDialog(WidgetTester tester, String label) async {
+    await tester.tap(find.text(label));
+    await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+  }
+
   testWidgets('时间轴渲染已实施动作（时点/温度/目视状态）', (tester) async {
     await tester.runAsync(() async {
       await seedDemoIfEmpty(repo);
@@ -58,15 +73,18 @@ void main() {
     expect(find.textContaining('32.5℃'), findsOneWidget);
     expect(find.textContaining('正常'), findsOneWidget);
 
-    await tester.pumpWidget(const SizedBox());
-    await tester.pump(const Duration(milliseconds: 1));
+    await teardownPage(tester);
   });
 
-  testWidgets('按下工步按钮即落库一条可追溯动作', (tester) async {
+  testWidgets('按下工步按钮弹出观测对话框，「直接记录」落库一条可追溯动作',
+      (tester) async {
     await pumpPage(tester);
     expect(find.text('尚无动作记录，请从上方工步开始'), findsOneWidget);
 
-    await tester.tap(find.text('凝乳'));
+    await tapStepAndWaitDialog(tester, '凝乳');
+    expect(find.text('记录 · 凝乳'), findsOneWidget);
+
+    await tester.tap(find.text('直接记录'));
     await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 50)));
 
@@ -80,7 +98,68 @@ void main() {
     expect(events.single.vatId, 'VAT-1');
     expect(events.single.processVersionId, 'PV-DEMO');
 
-    await tester.pumpWidget(const SizedBox());
-    await tester.pump(const Duration(milliseconds: 1));
+    await teardownPage(tester);
+  });
+
+  testWidgets('工步按钮可录入操作员工艺观测（温度/目视/位置/切块/备注）', (tester) async {
+    await pumpPage(tester);
+
+    await tapStepAndWaitDialog(tester, '切割');
+    expect(find.text('记录 · 切割'), findsOneWidget);
+
+    // 温度与切块尺寸（切块尺寸为切割工步专属字段）。
+    await tester.enterText(
+        find.widgetWithText(TextField, '实测温度 (℃)'), '31.5');
+    await tester.enterText(
+        find.widgetWithText(TextField, '切块尺寸 (mm)'), '25');
+    await tester.enterText(find.widgetWithText(TextField, '备注'), '粒偏硬');
+
+    // 目视状态。
+    await tester.tap(find.byType(DropdownButtonFormField<VisualState>));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('粒度不均').last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // 槽内位置。
+    await tester.tap(find.byType(DropdownButtonFormField<VatZone>));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('槽底').last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.tap(find.text('记录观测'));
+    await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)));
+
+    final events =
+        (await tester.runAsync(() => repo.eventsForVat('VAT-1')))!;
+    expect(events, hasLength(1));
+    final e = events.single;
+    expect(e.step, StepKind.cutting);
+    expect(e.temperatureC, 31.5);
+    expect(e.cutSizeMm, 25);
+    expect(e.visualState, VisualState.grainsUneven);
+    expect(e.zone, VatZone.bottom);
+    expect(e.note, '粒偏硬');
+
+    await teardownPage(tester);
+  });
+
+  testWidgets('观测对话框「取消」不落库', (tester) async {
+    await pumpPage(tester);
+
+    await tapStepAndWaitDialog(tester, '搅拌');
+    await tester.tap(find.text('取消'));
+    await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)));
+
+    final events =
+        (await tester.runAsync(() => repo.eventsForVat('VAT-1')))!;
+    expect(events, isEmpty);
+
+    await teardownPage(tester);
   });
 }

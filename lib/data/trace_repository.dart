@@ -136,6 +136,18 @@ class TraceRepository {
     return rows.map(moldFromRow).toList();
   }
 
+  /// 全部模具（换模页选择原模具用）。
+  Future<List<MoldRecord>> listAllMolds() async {
+    final rows = await _db.select(_db.molds).get();
+    return rows.map(moldFromRow).toList();
+  }
+
+  Future<MoldRecord?> findMoldById(String id) async {
+    final row = await (_db.select(_db.molds)..where((m) => m.id.equals(id)))
+        .getSingleOrNull();
+    return row == null ? null : moldFromRow(row);
+  }
+
   // ---------- 规则检查 ----------
 
   /// 汇总某工艺版本下全部追溯数据并运行所有工位规则。
